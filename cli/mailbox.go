@@ -16,7 +16,7 @@ var Mailbox = cgCli.Command{
 			Name:        "add",
 			Usage:       "Add a mailbox",
 			Description: "tmail mailbox add MAILBOX",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) (err error) {
 				if len(c.Args()) == 0 {
 					cliDieBadArgs(c)
 				}
@@ -29,7 +29,7 @@ var Mailbox = cgCli.Command{
 			Name:        "list",
 			Usage:       "List mailboxes",
 			Description: "tmail mailbox list [-d domain]",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) (err error) {
 				mailboxes, err := api.MailboxList()
 				cliHandleErr(err)
 				if len(mailboxes) == 0 {
@@ -47,7 +47,7 @@ var Mailbox = cgCli.Command{
 			Name:        "del",
 			Usage:       "Delete a mailbox",
 			Description: "tmail mailbox delete MAILBOX",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) (err error) {
 				if len(c.Args()) == 0 {
 					cliDieBadArgs(c)
 				}

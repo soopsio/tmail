@@ -5,56 +5,58 @@ import (
 	"github.com/toorop/tmail/api"
 )
 
-var user = cgCli.Command{
+var user = &cgCli.Command{
 	Name:  "user",
 	Usage: "commands to manage users of mailserver",
-	Subcommands: []cgCli.Command{
+	Subcommands: []*cgCli.Command{
 		// users
 		{
 			Name:        "add",
 			Usage:       "Add an user",
-			Description: "tmail user add USER CLEAR_PASSWD [-m] [-r] [-q BYTES] [--catchall]",
+			Description: "tmail user add [--mailbox] [--relay] [--quota BYTES] [--catchall] USER CLEAR_PASSWD ",
 			Flags: []cgCli.Flag{
-				cgCli.BoolFlag{
-					Name:  "mailbox, m",
+				&cgCli.BoolFlag{
+					Name:  "mailbox",
 					Usage: "Create a mailbox for this user.",
 				},
-				cgCli.BoolFlag{
-					Name:  "relay, r",
+				&cgCli.BoolFlag{
+					Name:  "relay",
 					Usage: "Authorise user to use server as SMTP relay.",
 				},
-				cgCli.BoolFlag{
+				&cgCli.BoolFlag{
 					Name:  "catchall",
 					Usage: "Set this user as catchall for domain",
 				},
-				cgCli.StringFlag{
-					Name:  "quota, q",
-					Value: "",
+				&cgCli.StringFlag{
+					Name:  "quota",
+					Value: "1G",
 					Usage: "Mailbox quota in bytes (not bits). You can use K,M,G as unit. Eg: 10G mean a quota of 10GB",
 				},
 			},
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				var err error
-				if len(c.Args()) < 2 {
+				if c.NArg() < 2 {
 					cliDieBadArgs(c)
 				}
-				err = api.UserAdd(c.Args()[0], c.Args()[1], c.String("q"), c.Bool("m"), c.Bool("r"), c.Bool("catchall"))
+				err = api.UserAdd(c.Args().First(), c.Args().Get(1), c.String("quota"), c.Bool("mailbox"), c.Bool("relay"), c.Bool("catchall"))
 				cliHandleErr(err)
 				cliDieOk()
+				return nil
 			},
 		},
 		{
 			Name:        "del",
 			Usage:       "Delete an user",
 			Description: "tmail user del USER",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				var err error
-				if len(c.Args()) != 1 {
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
-				err = api.UserDel(c.Args()[0])
+				err = api.UserDel(c.Args().First())
 				cliHandleErr(err)
 				cliDieOk()
+				return nil
 			},
 		},
 		// Update to change proprieties of an user
@@ -64,32 +66,33 @@ var user = cgCli.Command{
 			Usage:       "change proprieties of an user",
 			Description: "tmail user update USER -p NEW_PASSWORD",
 			Flags: []cgCli.Flag{
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "password, p",
 					Usage: "update user password",
 				},
 			},
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context) error {
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
 				if c.String("p") != "" {
-					cliHandleErr(api.UserChangePassword(c.Args()[0], c.String("p")))
+					cliHandleErr(api.UserChangePassword(c.Args().First(), c.String("p")))
 					cliDieOk()
 				}
 				cliDieBadArgs(c)
+				return nil
 			},
 		},
 		{
 			Name:        "list",
 			Usage:       "Return a list of users",
 			Description: "",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				users, err := api.UserGetAll()
 				cliHandleErr(err)
 				if len(users) == 0 {
 					println("There is no users yet.")
-					return
+					return err
 				}
 				for _, user := range users {
 					line := user.Login + " - authrelay: "
@@ -116,6 +119,7 @@ var user = cgCli.Command{
 					}
 					println(line)
 				}
+				return nil
 			},
 		},
 	},

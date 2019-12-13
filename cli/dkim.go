@@ -7,18 +7,18 @@ import (
 	"github.com/toorop/tmail/api"
 )
 
-var Dkim = cgCli.Command{
+var Dkim = &cgCli.Command{
 
 	Name:  "dkim",
 	Usage: "Commands to manage DKIM",
 	//Usage:       "tmail dkim [arguments...]",
-	Subcommands: []cgCli.Command{ // Add a mailbox
+	Subcommands: []*cgCli.Command{ // Add a mailbox
 		{
 			Name:        "enable",
 			Usage:       "Activate DKIM on domain DOMAIN",
 			Description: "To enable DKIM on domain DOMAIN:\n\ttmail dkim enable DOMAIN",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context)error {
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
 				dkc, err := api.DkimEnable(c.Args().First())
@@ -28,25 +28,27 @@ var Dkim = cgCli.Command{
 				println("And... That's all.")
 
 				cliDieOk()
+				return nil
 			},
 		}, {
 			Name:        "disable",
 			Usage:       "Disable DKIM on domain DOMAIN",
 			Description: "TO disable DKIM on domain DOMAIN\n\ttmail dkim disable DOMAIN",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context)error {
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
 				err := api.DkimDisable(c.Args().First())
 				cliHandleErr(err)
 				cliDieOk()
+				return nil
 			},
 		}, {
 			Name:        "getprivkey",
 			Usage:       "Return the private key of domain DOMAIN",
 			Description: "tmail dkim getprivkey DOMAIN",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context) error{
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
 				domain := c.Args().First()
@@ -61,13 +63,14 @@ var Dkim = cgCli.Command{
 				}
 
 				cliDieOk()
+				return nil
 			},
 		}, {
 			Name:        "getpubkey",
 			Usage:       "Return the public key of domain DOMAIN",
 			Description: "tmail dkim getpubkey DOMAIN",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context)error {
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
 				domain := c.Args().First()
@@ -82,13 +85,14 @@ var Dkim = cgCli.Command{
 				}
 
 				cliDieOk()
+				return nil
 			},
 		}, {
 			Name:        "getdnsrecord",
 			Usage:       "Return the DKIM DNS TXT record for domain DOMAIN",
 			Description: "tmail dkim getdnsrecord DOMAIN",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context) error{
+				if c.NArg()!= 1 {
 					cliDieBadArgs(c)
 				}
 				domain := c.Args().First()
@@ -103,6 +107,7 @@ var Dkim = cgCli.Command{
 				}
 
 				cliDieOk()
+				return nil
 			},
 		},
 	},

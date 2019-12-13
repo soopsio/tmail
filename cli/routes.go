@@ -2,21 +2,21 @@ package cli
 
 import (
 	"fmt"
-	"github.com/toorop/tmail/api"
 	cgCli "github.com/codegangsta/cli"
+	"github.com/toorop/tmail/api"
 	"os"
 	"strconv"
 )
 
-var Routes = cgCli.Command{
+var Routes = &cgCli.Command{
 	Name:  "routes",
 	Usage: "commands to manage outgoing SMTP routes",
-	Subcommands: []cgCli.Command{
+	Subcommands: []*cgCli.Command{
 		{
 			Name:        "list",
 			Usage:       "List routes",
 			Description: "tmail routes list",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				routes, err := api.RoutesGet()
 				cliHandleErr(err)
 				//scope.Log.Debug(routes)
@@ -74,6 +74,7 @@ var Routes = cgCli.Command{
 					}
 				}
 				os.Exit(0)
+				return nil
 			},
 		},
 		{
@@ -81,53 +82,53 @@ var Routes = cgCli.Command{
 			Usage:       "Add a route",
 			Description: "tmail routes add -d DESTINATION_HOST -rh REMOTE_HOST [-rp REMOTE_PORT] [-p PRORITY] [-l LOCAL_IP] [-u AUTHENTIFIED_USER] [-f MAIL_FROM] [-rl REMOTE_LOGIN] [-rpwd REMOTE_PASSWD]",
 			Flags: []cgCli.Flag{
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "destination, d",
 					Value: "",
 					Usage: "hostame destination, eg domain in rcpt user@domain",
 				},
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "remote host, rh",
 					Value: "",
 					Usage: "remote host, eg where email should be deliver",
-				}, cgCli.IntFlag{
+				}, &cgCli.IntFlag{
 					Name:  "remotePort, rp",
 					Value: 25,
 					Usage: "Route port",
 				},
 
-				cgCli.IntFlag{
+				&cgCli.IntFlag{
 					Name:  "priority, p",
 					Value: 1,
 					Usage: "Route priority. Lowest-numbered priority routes are the most preferred",
 				},
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "localIp, l",
 					Value: "",
 					Usage: "Local IP(s) to use. If you want to add multiple IP separate them by | for round-robin or & for failover. Don't mix & and |",
 				},
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "smtpUser, u",
 					Value: "",
 					Usage: "Routes for authentified user user.",
 				},
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "mailFrom, f",
 					Value: "",
 					Usage: "Routes for MAIL FROM. User need to be authentified",
 				},
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "remoteLogin, rl",
 					Value: "",
 					Usage: "SMTPauth login for remote host",
 				},
-				cgCli.StringFlag{
+				&cgCli.StringFlag{
 					Name:  "remotePasswd, rpwd",
 					Value: "",
 					Usage: "SMTPauth passwd for remote host",
 				},
 			},
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				// si la destination n'est pas renseignée on wildcard
 				host := c.String("d")
 				if host == "" {
@@ -136,20 +137,22 @@ var Routes = cgCli.Command{
 				// (host, localIp, remoteHost string, remotePort, priority int64, user, mailFrom, smtpAuthLogin, smtpAuthPasswd string)
 				err := api.RoutesAdd(host, c.String("l"), c.String("rh"), c.Int("rp"), c.Int("p"), c.String("u"), c.String("f"), c.String("rl"), c.String("rpwd"))
 				cliHandleErr(err)
+				return nil
 			},
 		},
 		{
 			Name:        "del",
 			Usage:       "Delete a route",
 			Description: "tmail routes del ROUTE_ID",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context) error {
+				if c.NArg()!= 1 {
 					cliDieBadArgs(c, "you must provide a route ID")
 				}
-				routeId, err := strconv.ParseInt(c.Args()[0], 10, 64)
+				routeId, err := strconv.ParseInt(c.Args().First(), 10, 64)
 				cliHandleErr(err)
 				err = api.RoutesDel(routeId)
 				cliHandleErr(err)
+				return nil
 			},
 		},
 	},

@@ -90,13 +90,11 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "tmail"
 	app.Usage = "SMTP server"
-	app.Author = "Stéphane Depierrepont aka toorop"
-	app.Email = "toorop@tmail.io"
 	app.Version = TmailVersion
 	app.Commands = tcli.CliCommands
 	// no know command ? Launch server
-	app.Action = func(c *cli.Context) {
-		if len(c.Args()) != 0 {
+	app.Action = func(c *cli.Context) error {
+		if c.NArg() != 0 {
 			cli.ShowAppHelp(c)
 		} else {
 			// if there is nothing to do then... do nothing
@@ -121,7 +119,6 @@ func main() {
 			opts := nsqd.NewOptions()
 			opts.Logger = log.New(ioutil.Discard, "", 0)
 			opts.Logger = core.NewNSQLogger()
-			opts.Verbose = core.Cfg.GetDebugEnabled()
 			opts.DataPath = core.GetBasePath() + "/nsq"
 			// if cluster get lookupd addresses
 			if core.Cfg.GetClusterModeEnabled() {
@@ -151,12 +148,15 @@ func main() {
 			// Number of message in RAM before synching to disk
 			opts.MemQueueSize = 0
 
-			nsqd := nsqd.New(opts)
+			nsqd, err := nsqd.New(opts)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			nsqd.LoadMetadata()
 			if err = nsqd.PersistMetadata(); err != nil {
 				log.Fatalf("ERROR: failed to persist metadata - %s", err.Error())
 			}
-			nsqd.Main()
+			go nsqd.Main()
 
 			// smtpd
 			if core.Cfg.GetLaunchSmtpd() {
@@ -201,6 +201,7 @@ func main() {
 			// exit
 			os.Exit(0)
 		}
+		return nil
 	}
 	app.Run(os.Args)
 

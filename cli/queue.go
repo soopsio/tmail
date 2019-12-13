@@ -9,16 +9,16 @@ import (
 	"github.com/toorop/tmail/api"
 )
 
-var Queue = cgCli.Command{
+var Queue = &cgCli.Command{
 	Name:  "queue",
 	Usage: "commands to interact with tmail queue",
-	Subcommands: []cgCli.Command{
+	Subcommands: []*cgCli.Command{
 		// list queue
 		{
 			Name:        "list",
 			Usage:       "List messages in queue",
 			Description: "tmail queue list",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				var status string
 				messages, err := api.QueueGetMessages()
 				cliHandleErr(err)
@@ -46,53 +46,58 @@ var Queue = cgCli.Command{
 					}
 				}
 				os.Exit(0)
+				return nil
 			},
 		}, {
 			Name:        "count",
 			Usage:       "count messages in queue",
 			Description: "tmail queue count",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				count, err := api.QueueCount()
 				cliHandleErr(err)
 				println(count)
 				os.Exit(0)
+				return nil
 			},
 		},
 		{
 			Name:        "discard",
 			Usage:       "Discard (delete without bouncing) a message in queue",
 			Description: "tmail queue discard MESSAGE_ID",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context) error {
+				if c.NArg() != 1 {
 					cliDieBadArgs(c)
 				}
-				id, err := strconv.ParseInt(c.Args()[0], 10, 64)
+				id, err := strconv.ParseInt(c.Args().First(), 10, 64)
 				cliHandleErr(err)
 				cliHandleErr(api.QueueDiscardMsg(id))
 				cliDieOk()
+				return nil
 			},
 		},
 		{
 			Name:        "bounce",
 			Usage:       "Bounce a message in queue",
 			Description: "tmail queue bounce MESSAGE_ID",
-			Action: func(c *cgCli.Context) {
-				if len(c.Args()) != 1 {
+			Action: func(c *cgCli.Context) error {
+				if c.NArg()!= 1 {
 					cliDieBadArgs(c)
 				}
-				id, err := strconv.ParseInt(c.Args()[0], 10, 64)
+				id, err := strconv.ParseInt(c.Args().First(), 10, 64)
 				cliHandleErr(err)
 				cliHandleErr(api.QueueBounceMsg(id))
 				cliDieOk()
+				return nil
 			},
 		},
 		{
 			Name:        "purge",
 			Usage:       "Purge expired message from queue",
 			Description: "tmail queue purge",
-			Action: func(c *cgCli.Context) {
+			Action: func(c *cgCli.Context) error {
 				cliHandleErr(api.QueuePurge())
 				cliDieOk()
+				return nil
 			},
 		},
 	},
